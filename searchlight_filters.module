@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ */
+
+/**
+ * Implements hook_views_api().
+ */
+function searchlight_filters_views_api() {
+  return array(
+    'api' => '3.0',
+    'path' => drupal_get_path('module', 'searchlight_filters') . '/views',
+  );
+}
+
+/**
+ * TODO: move to Searchlight?
+ * TODO: environment name?
+ */
+function searchlight_filters_active_facets($set = NULL) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if (!empty($set)) {
+    $cache = array_merge($cache, $set);
+  }
+  return $cache;
+}

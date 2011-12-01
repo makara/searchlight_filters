@@ -1,0 +1,8 @@
+name = "Searchlight filters"
+description = ""
+core = "7.x"
+package = "Search"
+php = "5.2.4"
+dependencies[] = "searchlight"
+
+files[] = views/searchlight_filters_filter.inc
