@@ -10,8 +10,9 @@ class searchlight_filters_filter extends views_handler_filter {
   function option_definition() {
     $options = parent::option_definition();
     $options['facet_get'] = array('default' => array());
+    $options['facet_get_apply'] = array('default' => 'result');
     $options['facet_set'] = array('default' => array());
-    $options['expose']['contains']['facet_expose'] = array('default' => array());
+    $options['expose']['contains']['facet_expose'] = array('default' => '');
     $options['expose']['contains']['facet_expose_get'] = array('default' => array());
     $options['expose']['contains']['facet_expose_set'] = array('default' => TRUE);
     return $options;
@@ -49,6 +50,17 @@ class searchlight_filters_filter extends views_handler_filter {
       '#title' => t('Get facet results to current'),
       '#options' => $options,
       '#default_value' => $this->options['facet_get'],
+      '#weight' => 10,
+    );
+    $form['facet_get_apply'] = array(
+      '#type' => 'radios',
+      '#title' => t('And apply the facet result'),
+      '#options' => array(
+        'facet' => t('Using the selected facet'),
+        'result' => t('Using the search result'),
+      ),
+      '#default_value' => $this->options['facet_get_apply'],
+      '#weight' => 11,
     );
     // TODO: not in use.
 //     $form['facet_set'] = array(
@@ -106,16 +118,31 @@ class searchlight_filters_filter extends views_handler_filter {
     // $this->environment->views_options_override['pager'] = array('type' => 'none', 'options' => array('offset' => 0));
     $this->environment->initView();
 
-    // Using the search result dircetly.
-    if (!empty($this->environment->query->search_result)) {
-      $query = &$this->environment->query;
-      foreach ($this->environment->plugins as $name => $plugin) {
-        if (array_key_exists($name, $active_facets) && !empty($plugin->field)) {
-          if ($table_alias = $this->query->ensure_table($query->base_table, $this->relationship)) {
-            $this->query->add_where($this->options['group'], "{$table_alias}.{$query->base_field}", $query->search_result['result'], 'IN');
+    switch ($this->options['facet_get_apply']) {
+      case 'facet':
+        // Using the selected facet.
+        foreach ($this->environment->plugins as $name => $plugin) {
+          if (array_key_exists($name, $active_facets) && !empty($plugin->field)) {
+            if ($table_alias = $this->query->ensure_table($plugin->field['table'], $this->relationship)) {
+              $this->query->add_where($this->options['group'], "{$table_alias}.{$plugin->field['field']}", $active_facets[$name]);
+            }
           }
         }
-      }
+        break;
+
+      case 'result':
+        // Using the search result.
+        if (!empty($this->environment->query->search_result)) {
+          $query = &$this->environment->query;
+          foreach ($this->environment->plugins as $name => $plugin) {
+            if (array_key_exists($name, $active_facets) && !empty($plugin->field)) {
+              if ($table_alias = $this->query->ensure_table($query->base_table, $this->relationship)) {
+                $this->query->add_where($this->options['group'], "{$table_alias}.{$query->base_field}", $query->search_result['result'], 'IN');
+              }
+            }
+          }
+        }
+        break;
     }
 
     // Finished. Destroy.
