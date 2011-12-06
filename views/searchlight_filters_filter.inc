@@ -101,7 +101,9 @@ class searchlight_filters_filter extends views_handler_filter {
     $this->environment->initValues($active_facets);
 
     // Use its own view to get facet results.
-    // TODO: force no pager and get all results.
+    // Force no pager and get all results.
+    // TODO: this requires the dev version of Searchlight. Until it is merged...
+    // $this->environment->views_options_override['pager'] = array('type' => 'none', 'options' => array('offset' => 0));
     $this->environment->initView();
 
     // Using the search result dircetly.
